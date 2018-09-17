@@ -1,0 +1,163 @@
+<!DOCTYPE html> 
+<html><head>
+    <title>Time Series Insights Sample App</title>
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="no-cache" />
+    <!-- <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.11/js/adal.min.js"></script> -->
+    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/0.2.3/js/msal.min.js"></script>
+
+    
+    <!--bluebird for Promise polyfill to support IE in sample client-->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/latest/bluebird.min.js"></script>     -->
+    
+    <!-- PROD RESOURCE LINKS -->
+    <!-- <link rel="stylesheet" type="text/css" href="sampleStyles.css"></link>
+    <script src="https://unpkg.com/tsiclient@1.1.19/tsiclient.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/tsiclient@1.1.19/tsiclient.css"></link> -->
+
+    <!-- DEV RESOURCE LINKS -->
+    <link rel="stylesheet" type="text/css" href="pages/samples/sampleStyles.css"></link>
+    <script src="dist/tsiclient.js"></script>
+    <link rel="stylesheet" type="text/css" href="dist/tsiclient.css"></link>
+</head>
+<body>
+    <div id="loginModal" style="display: none">
+        <div>
+            <span id="api_response"></span>
+            <a href="#" onclick="loginSequence(); return false;">Log in</a>
+        </div>
+    </div>
+    <div style="height: 100%; position: absolute; top: 0; width: 100%;">
+        <div class="header">
+            Time Series Insights Sample App
+            <pre id="api_response2"></pre>
+            <div class="rightSide">
+                <div id="username"></div>
+                <div class="loginLogout">
+                    <p>
+                        <a href="#" onclick="userAgentApplication.logout(); return false;">Log out</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+       
+        <div class="chartsWrapper">
+            <div class="rowOfCardsTitle">Static Line Charts With Full Size Legends</div>
+            <div class="rowOfCards">
+                <div class="card" style="flex-shrink: 1; height: 100%; width: 45%;">
+                    <div style="color: black; background: white; border-bottom: 1px solid silver;" class="cardTitle">3 Factory Pressures, Light Theme</div>
+                    <div class="cardChart" id="chart1"></div>
+                </div>
+                <div class="card" style="flex-shrink: 1; height: 100%; width: 45%;">
+                    <div style="color: black; background: white; border-bottom: 1px solid silver;" class="cardTitle">3 Factory Pressures, Light Theme</div>
+                    <div class="cardChart" id="chart2"></div>
+                </div>
+            </div>
+        </div>
+        
+    <script type="text/javascript">
+
+        var msalconfig = {
+            clientID: "120d688d-1518-4cf7-bd38-182f158850b6"
+        };
+
+        var userAgentApplication = new Msal.UserAgentApplication(msalconfig.clientID, null, authCallback, {
+            cacheLocation: 'localStorage'
+        });
+
+        var graphScopes = ['https://api.timeseries.azure.com//.default'];
+
+        if (userAgentApplication.isCallback(window.location.hash)) {    
+            userAgentApplication.navigateToLoginRequestUrl = false;
+        } else {
+            userAgentApplication.user = userAgentApplication.getUser();
+            if (userAgentApplication.user) {
+                document.getElementById('username').textContent = userAgentApplication.user.name;
+            } else {
+                document.getElementById('username').textContent = 'Not signed in.';
+            }
+        }
+
+        function loginSequence () {
+            userAgentApplication.loginRedirect(graphScopes);
+        }
+
+        userAgentApplication.getTsiToken = function () {
+            return userAgentApplication.acquireTokenSilent(graphScopes, null).then(function (accessToken) {
+                return accessToken;
+                //AcquireTokenSilent Success
+            }, function (error) {
+                debugger;
+                // TODO: Handle error obtaining access token
+                document.getElementById('api_response').textContent = "";
+                document.getElementById('loginModal').style.display = "block";
+                document.getElementById('api_response2').textContent = '';
+                return;
+            });
+
+        }
+
+        function authCallback(errorDesc, token, error, tokenType) {
+            if (token) {
+                userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
+                    // Change button to Sign Out
+                    return accessToken;
+                }, function (error) {
+                    console.log(error);
+                    userAgentApplication.acquireTokenPopup(graphScopes).then(function (accessToken) {
+                        return accessToken;
+                    }, function (error) {
+                        console.log(error);
+                    });
+                });
+            }
+            else if (errorDesc || error) {
+                console.log(error + ':' + errorDesc);
+            }
+        }
+
+        // END: AUTHENTICATION RELATED CODE USING MSAL.JS
+        var tsiClient = new TsiClient();
+
+        
+        // Example 1
+        var aggregateExpressions2 = [];
+        var startDate = new Date('2017-04-14T13:00:00Z');
+        var endDate = new Date(startDate.valueOf() + 1000*60*60*1);
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory1'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#FF8C00', 'Factory1Pressure'));
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory2'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#D869CB', 'Factory2Pressure'));
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory3'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#60B9AE', 'Factory.3.Pressure'));
+        userAgentApplication.getTsiToken().then(function(token){
+            tsiClient.server.getAggregates(token, '10000000-0000-0000-0000-100000000108.env.timeseries.azure.com', aggregateExpressions2.map(function(ae){return ae.toTsx()})).then(function(result){
+                var transformedResult = tsiClient.ux.transformAggregatesForVisualization(result, aggregateExpressions2);
+                var lineChart = new tsiClient.ux.LineChart(document.getElementById('chart1'));
+                var theme = 'light';
+                lineChart.render(transformedResult, {theme: theme, grid: true, tooltip: true, legend: 'compact'}, aggregateExpressions2);
+            });
+        });
+
+        // Example 2
+        var aggregateExpressions2 = [];
+        var startDate = new Date('2017-04-14T13:00:00Z');
+        var endDate = new Date(startDate.valueOf() + 1000*60*60*1);
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory1'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#FF8C00', 'Factory1Pressure'));
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory2'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#D869CB', 'Factory2Pressure'));
+        aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory3'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
+            { from: startDate, to: endDate, bucketSize: '2m' }, null, '#60B9AE', 'Factory.3.Pressure'));
+        userAgentApplication.getTsiToken().then(function(token){
+            tsiClient.server.getAggregates(token, '10000000-0000-0000-0000-100000000108.env.timeseries.azure.com', aggregateExpressions2.map(function(ae){return ae.toTsx()})).then(function(result){
+                var transformedResult = tsiClient.ux.transformAggregatesForVisualization(result, aggregateExpressions2);
+                var lineChart = new tsiClient.ux.LineChart(document.getElementById('chart2'));
+                var theme = 'light';
+                lineChart.render(transformedResult, {theme: theme, grid: true, tooltip: true, legend: 'compact'}, aggregateExpressions2);
+            });
+        });
+
+    </script>
+</body>
+</html>

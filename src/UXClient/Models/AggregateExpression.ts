@@ -46,7 +46,7 @@ class AggregateExpression {
         var aggregateObject = {};
         var dimensionObject = {dateHistogram: {input: {builtInProperty: "$ts"}, breaks: {size: this.searchSpan.bucketSize}}};
         if(this.splitByObject != null){
-            aggregateObject['dimension'] = {uniqueValues: {input: this.splitByObject, take: 1000}};
+            aggregateObject['dimension'] = {uniqueValues: {input: this.splitByObject, take: 50}};
             aggregateObject['aggregate'] = {dimension : dimensionObject, measures: measures};
         }
         else{
