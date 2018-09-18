@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="cache-control" content="no-cache" />
     <!-- <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.11/js/adal.min.js"></script> -->
-    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/0.2.3/js/msal.min.js"></script>
+    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/0.2.3/js/msal.js"></script>
 
     
     <!--bluebird for Promise polyfill to support IE in sample client-->
@@ -66,7 +66,6 @@
         });
 
         var graphScopes = ['https://api.timeseries.azure.com//.default'];
-
         if (userAgentApplication.isCallback(window.location.hash)) {    
             userAgentApplication.navigateToLoginRequestUrl = false;
         } else {
@@ -74,51 +73,28 @@
             if (userAgentApplication.user) {
                 document.getElementById('username').textContent = userAgentApplication.user.name;
             } else {
-                document.getElementById('username').textContent = 'Not signed in.';
+                userAgentApplication.loginRedirect(graphScopes);
             }
-        }
-
-        function loginSequence () {
-            userAgentApplication.loginRedirect(graphScopes);
         }
 
         userAgentApplication.getTsiToken = function () {
             return userAgentApplication.acquireTokenSilent(graphScopes, null).then(function (accessToken) {
                 return accessToken;
-                //AcquireTokenSilent Success
             }, function (error) {
-                debugger;
-                // TODO: Handle error obtaining access token
-                document.getElementById('api_response').textContent = "";
-                document.getElementById('loginModal').style.display = "block";
-                document.getElementById('api_response2').textContent = '';
-                return;
+                if(error)
+                    userAgentApplication.acquireTokenRedirect(graphScopes);
             });
 
         }
 
         function authCallback(errorDesc, token, error, tokenType) {
-            if (token) {
-                userAgentApplication.acquireTokenSilent(graphScopes).then(function (accessToken) {
-                    // Change button to Sign Out
-                    return accessToken;
-                }, function (error) {
-                    console.log(error);
-                    userAgentApplication.acquireTokenPopup(graphScopes).then(function (accessToken) {
-                        return accessToken;
-                    }, function (error) {
-                        console.log(error);
-                    });
-                });
-            }
-            else if (errorDesc || error) {
+            if (errorDesc || error) {
                 console.log(error + ':' + errorDesc);
             }
         }
 
         // END: AUTHENTICATION RELATED CODE USING MSAL.JS
         var tsiClient = new TsiClient();
-
         
         // Example 1
         var aggregateExpressions2 = [];
@@ -149,14 +125,17 @@
             { from: startDate, to: endDate, bucketSize: '2m' }, null, '#D869CB', 'Factory2Pressure'));
         aggregateExpressions2.push(new tsiClient.ux.AggregateExpression({predicateString: "Factory = 'Factory3'"}, {property: 'Pressure', type: "Double"}, ['avg', 'min', 'max'],
             { from: startDate, to: endDate, bucketSize: '2m' }, null, '#60B9AE', 'Factory.3.Pressure'));
-        userAgentApplication.getTsiToken().then(function(token){
-            tsiClient.server.getAggregates(token, '10000000-0000-0000-0000-100000000108.env.timeseries.azure.com', aggregateExpressions2.map(function(ae){return ae.toTsx()})).then(function(result){
-                var transformedResult = tsiClient.ux.transformAggregatesForVisualization(result, aggregateExpressions2);
-                var lineChart = new tsiClient.ux.LineChart(document.getElementById('chart2'));
-                var theme = 'light';
-                lineChart.render(transformedResult, {theme: theme, grid: true, tooltip: true, legend: 'compact'}, aggregateExpressions2);
+        setInterval(() => {
+            userAgentApplication.getTsiToken().then(function(token){
+                tsiClient.server.getAggregates(token, '10000000-0000-0000-0000-100000000108.env.timeseries.azure.com', aggregateExpressions2.map(function(ae){return ae.toTsx()})).then(function(result){
+                    var transformedResult = tsiClient.ux.transformAggregatesForVisualization(result, aggregateExpressions2);
+                    document.getElementById('chart2').innerHTML = '';
+                    var lineChart = new tsiClient.ux.LineChart(document.getElementById('chart2'));
+                    var theme = 'light';
+                    lineChart.render(transformedResult, {theme: theme, grid: true, tooltip: true, legend: 'compact'}, aggregateExpressions2);
+                });
             });
-        });
+        }, 5000);
 
     </script>
 </body>
