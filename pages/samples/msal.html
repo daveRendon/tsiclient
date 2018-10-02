@@ -11,14 +11,14 @@
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/latest/bluebird.min.js"></script>     -->
     
     <!-- PROD RESOURCE LINKS -->
-    <!-- <link rel="stylesheet" type="text/css" href="sampleStyles.css"></link>
+    <link rel="stylesheet" type="text/css" href="sampleStyles.css"></link>
     <script src="https://unpkg.com/tsiclient@1.1.19/tsiclient.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/tsiclient@1.1.19/tsiclient.css"></link> -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/tsiclient@1.1.19/tsiclient.css"></link>
 
     <!-- DEV RESOURCE LINKS -->
-    <link rel="stylesheet" type="text/css" href="pages/samples/sampleStyles.css"></link>
+    <!-- <link rel="stylesheet" type="text/css" href="pages/samples/sampleStyles.css"></link>
     <script src="dist/tsiclient.js"></script>
-    <link rel="stylesheet" type="text/css" href="dist/tsiclient.css"></link>
+    <link rel="stylesheet" type="text/css" href="dist/tsiclient.css"></link> -->
 </head>
 <body>
     <div id="loginModal" style="display: none">
@@ -58,7 +58,7 @@
     <script type="text/javascript">
 
         var msalconfig = {
-            clientID: "120d688d-1518-4cf7-bd38-182f158850b6"
+            clientID: "b54d43ab-4c7d-41cc-bea4-f39016158011"
         };
 
         var userAgentApplication = new Msal.UserAgentApplication(msalconfig.clientID, null, authCallback, {
@@ -68,7 +68,7 @@
 
         var graphScopes = ['https://api.timeseries.azure.com//.default'];
         if (userAgentApplication.isCallback(window.location.hash)) {    
-            userAgentApplication.navigateToLoginRequestUrl = false;
+            // userAgentApplication.navigateToLoginRequestUrl = false;
         } else {
             userAgentApplication.user = userAgentApplication.getUser();
             if (userAgentApplication.user) {
