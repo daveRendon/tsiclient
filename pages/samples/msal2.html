@@ -61,7 +61,7 @@
             clientID: "b54d43ab-4c7d-41cc-bea4-f39016158011"
         };
 
-        var userAgentApplication = new Msal.UserAgentApplication(msalconfig.clientID, null, authCallback, {
+        var userAgentApplication = new Msal.UserAgentApplication(msalconfig.clientID, 'https://login.microsoftonline.com/organizations', authCallback, {
             cacheLocation: 'localStorage',
             storeAuthStateInCookie: true
         });
