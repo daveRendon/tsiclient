@@ -66,7 +66,7 @@
             storeAuthStateInCookie: true
         });
 
-        var graphScopes = ['https://api.timeseries.azure.com//.default'];
+        // var graphScopes = ['https://api.timeseries.azure.com//.default'];
         if (userAgentApplication.isCallback(window.location.hash)) {    
             // userAgentApplication.navigateToLoginRequestUrl = false;
         } else {
@@ -74,10 +74,11 @@
             if (userAgentApplication.user) {
                 document.getElementById('username').textContent = userAgentApplication.user.name;
             } else {
-                userAgentApplication.loginRedirect(graphScopes);
+                userAgentApplication.loginRedirect();
             }
 
             userAgentApplication.getTsiToken = function () {
+                var graphScopes = ['https://api.timeseries.azure.com//.default'];
                 userAgentApplication.user = userAgentApplication.getUser();
                 if (!userAgentApplication.user) {
                     return null;
@@ -85,6 +86,7 @@
                 return userAgentApplication.acquireTokenSilent(graphScopes, null).then(function (accessToken) {
                     return accessToken;
                     }, function (error) {
+                        debugger;
                         userAgentApplication.acquireTokenRedirect(graphScopes);
                     });
 
