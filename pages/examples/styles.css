@@ -1,6 +1,7 @@
 body { 
 	font-family: "Segoe UI", sans-serif; 
-	background: #1e2223; 
+	background: white; 
+	color: #333;
 	height: 100%; 
 	padding: 0; 
 	margin: 0;
@@ -296,4 +297,16 @@ a:hover{
 
 a:nth-child(2){
 	float: right;
+}
+
+.titleHeader{
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 400px;
+	border-bottom: 1px solid silver;
+}
+
+.titleHeader .left {
 }
